@@ -348,7 +348,12 @@
                 height: 100% !important;
             }
             .mobile-result-active .scene { display: none !important; }
-            .mobile-result-active .result-card { margin-top: 0; min-height: 520px; }
+            .result-card { display: none !important; } /* Hidden completely until active */
+            .mobile-result-active .result-card { 
+                display: flex !important; 
+                margin-top: 0; 
+                min-height: 520px; 
+            }
             #mobile-back-btn { display: block !important; margin-bottom: 1.5rem; width: 100%; }
             
             .split-layout {
@@ -363,7 +368,8 @@
             }
             .top-nav {
                 flex-wrap: wrap;
-                padding: 1rem;
+                padding: 1rem 1.5rem;
+                justify-content: center;
                 gap: 0.5rem;
             }
             .nav-links {
@@ -396,7 +402,7 @@
                 font-size: 3.5rem;
             }
             .main-container {
-                padding: 1rem;
+                padding: 1rem 1.5rem;
                 margin: 8rem auto 5rem auto;
             }
             .step-header {
