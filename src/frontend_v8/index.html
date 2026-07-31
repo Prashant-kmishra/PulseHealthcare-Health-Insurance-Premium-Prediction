@@ -339,6 +339,11 @@
         
         /* --- MOBILE RESPONSIVE QUERIES --- */
         @media (max-width: 1024px) {
+            html, body {
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                height: 100% !important;
+            }
             .mobile-result-active .scene { display: none !important; }
             .mobile-result-active .result-card { margin-top: 0; min-height: 520px; }
             #mobile-back-btn { display: block !important; margin-bottom: 1.5rem; width: 100%; }
@@ -639,8 +644,13 @@
         
         function sendHeightToStreamlit() {
             if(window.Streamlit) {
-                const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, document.body.offsetHeight);
-                window.Streamlit.setFrameHeight(height + 50);
+                if (window.innerWidth <= 1024) {
+                    // Force a massive height on mobile to absolutely guarantee the form is never cut off
+                    window.Streamlit.setFrameHeight(1500);
+                } else {
+                    const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, document.body.offsetHeight);
+                    window.Streamlit.setFrameHeight(height + 50);
+                }
             }
         }
         
