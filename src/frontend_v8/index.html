@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthPulse Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+            color: #0f172a;
+            overflow-x: hidden;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* --- BACKGROUND PARTICLES --- */
+        #universe {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -5;
+            pointer-events: none;
+        }
+
+        /* --- TOP NAV --- */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 50;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #0f172a;
+        }
+        .nav-logo-icon {
+            background: #2563eb;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+        }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #64748b;
+        }
+        .nav-links a.active { color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 0.25rem; }
+        .nav-links a:hover { color: #0f172a; }
+        .nav-btn {
+            background: #2563eb;
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.39);
+        }
+
+        /* --- MAIN LAYOUT --- */
+        .main-container {
+            max-width: 1200px;
+            margin: 8rem auto 4rem auto;
+            padding: 0 2rem;
+        }
+        .header-text {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .header-text h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #0f172a;
+            margin-bottom: 1rem;
+        }
+        .header-text p {
+            font-size: 1.1rem;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            align-items: flex-start;
+        }
+
+        /* --- 3D WIZARD CARD (LEFT) --- */
+        .scene {
+            perspective: 2000px;
+            width: 100%;
+        }
+        .wizard-container {
+            position: relative;
+            width: 100%;
+            height: 480px;
+        }
+        .wizard-step {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: rgba(255, 255, 255, 0.95); /* Increased opacity instead of blur */
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+            display: none; 
+            flex-direction: column;
+            pointer-events: none;
+            opacity: 0;
+            transform: rotateY(180deg); /* Default hidden state */
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s;
+        }
+        
+        #step-1 { 
+            transform: rotateY(0deg); 
+            display: flex; 
+            pointer-events: auto; 
+            opacity: 1; 
+            z-index: 10;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .step-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            background: #eff6ff;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .step-title h2 { font-size: 1.25rem; font-weight: 700; color: #0f172a; }
+        .step-title p { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem; }
+
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.02);
+            position: relative;
+            z-index: 20;
+            transform: translateZ(0); /* Force hitbox calculation */
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn-primary {
+            background: #1d4ed8;
+            color: white;
+            font-weight: 600;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            margin-top: auto;
+            box-shadow: 0 10px 25px -5px rgba(29, 78, 216, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: #1e40af;
+            box-shadow: 0 15px 30px -5px rgba(29, 78, 216, 0.5);
+        }
+        .btn-secondary {
+            background: white;
+            color: #0f172a;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);
+        }
+        .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        /* --- RESULT CARD (RIGHT) --- */
+        .result-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+        }
+        .res-eyebrow {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        .res-value {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+        }
+        .res-value span.currency {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        .res-value span.yr {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-left: 0.5rem;
+        }
+
+        .info-card {
+            background: rgba(255,255,255,0.8);
+            border: 1px solid #f1f5f9;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s;
+        }
+        .info-card.disabled {
+            opacity: 0.4;
+            filter: grayscale(1);
+        }
+        .info-label { color: #64748b; font-size: 0.9rem; font-weight: 600; }
+        .info-val { color: #0f172a; font-weight: 700; font-size: 1rem;}
+        .info-badge {
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .btn-analyze {
+            width: 100%;
+            background: #0f172a;
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            margin-top: auto;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-analyze:hover { background: #1e293b; }
+        .btn-analyze:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-accuracy {
+            width: 100%;
+            background: white;
+            color: #0f172a;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-accuracy:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background Canvas -->
+    <canvas id="universe"></canvas>
+
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path></svg>
+            </div>
+            Pulse Healthcare
+        </div>
+        <div class="nav-links">
+            <a href="#" class="active">Calculator</a>
+            <a href="#" onclick="alert('The Pulse AI Agent feature is currently in development and will be coming soon!'); return false;">Talk to Pulse AI</a>
+        </div>
+        <button class="nav-btn" onclick="analyzePrice()">Analyze Price</button>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        
+        <div class="header-text">
+            <h1>Predict your <span class="text-blue-600">Health Insurance Premium</span></h1>
+            <p>Pulse Health is now AI powered. Our models are now predicting the premiums with 98% accuracy.</p>
+        </div>
+
+        <div class="split-layout">
+            
+            <!-- LEFT: 3D Flip Form -->
+            <div class="scene">
+                <form id="premium-form">
+                    <div class="wizard-container" id="wizard">
+                        
+                        <!-- STEP 1 -->
+                        <div class="wizard-step" id="step-1">
+                            <div class="step-header">
+                                <div class="step-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                </div>
+                                <div class="step-title">
+                                    <h2>Personal Info</h2>
+                                    <p>Step 1 of 3</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-5 mb-6">
+                                <div>
+                                    <label class="form-label">Age</label>
+                                    <input type="number" id="f-age" class="form-input" value="30" min="18" max="100" onchange="if(this.value < 18) this.value = 18; if(this.value > 100) this.value = 100;" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Gender</label>
+                                    <select id="f-gender" class="form-select" required>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Marital Status</label>
+                                    <select id="f-marital" class="form-select" required>
+                                        <option value="Unmarried">Unmarried</option>
+                                        <option value="Married">Married</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Children</label>
+                                    <input type="number" id="f-children" class="form-input" value="0" min="0" required>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-primary" onclick="nextStep(1)">Next: Health Profile &rarr;</button>
+                        </div>
+
+                        <!-- STEP 2 -->
+                        <div class="wizard-step" id="step-2">
+                            <div class="step-header">
+                                <div class="step-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                                </div>
+                                <div class="step-title">
+                                    <h2>Health Profile</h2>
+                                    <p>Step 2 of 3</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-5 mb-6">
+                                <div>
+                                    <label class="form-label">BMI Category</label>
+                                    <select id="f-bmi" class="form-select" required>
+                                        <option value="Normal">Normal</option>
+                                        <option value="Overweight">Overweight</option>
+                                        <option value="Obesity">Obesity</option>
+                                        <option value="Underweight">Underweight</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Medical History</label>
+                                    <select id="f-medical" class="form-select" required>
+                                        <option value="No Disease">No Disease</option>
+                                        <option value="Diabetes">Diabetes</option>
+                                        <option value="High blood pressure">High blood pressure</option>
+                                        <option value="Heart disease">Heart disease</option>
+                                        <option value="Thyroid">Thyroid</option>
+                                        <option value="Diabetes & Heart disease">Diabetes & Heart disease</option>
+                                        <option value="Diabetes & High blood pressure">Diabetes & High blood pressure</option>
+                                        <option value="Diabetes & Thyroid">Diabetes & Thyroid</option>
+                                        <option value="High blood pressure & Heart disease">High blood pressure & Heart disease</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Smoking Status</label>
+                                    <select id="f-smoking" class="form-select" required>
+                                        <option value="No Smoking">No Smoking</option>
+                                        <option value="Regular">Regular</option>
+                                        <option value="Occasional">Occasional</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 mt-auto">
+                                <button type="button" class="btn-secondary w-1/3" onclick="prevStep(1)">Back</button>
+                                <button type="button" class="btn-primary w-2/3" onclick="nextStep(2)">Next: Financials &rarr;</button>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3 -->
+                        <div class="wizard-step" id="step-3">
+                            <div class="step-header">
+                                <div class="step-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                                </div>
+                                <div class="step-title">
+                                    <h2>Financials & Plan</h2>
+                                    <p>Step 3 of 3</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-5 mb-6">
+                                <div>
+                                    <label class="form-label">Employment Status</label>
+                                    <select id="f-employment" class="form-select" required>
+                                        <option value="Salaried">Salaried</option>
+                                        <option value="Self-Employed">Self-Employed</option>
+                                        <option value="Freelancer">Freelancer</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Annual Salary (Lakhs)</label>
+                                    <input type="number" id="f-salary" class="form-input" value="25.0" step="0.1" min="1" max="100" onchange="if(this.value < 1) this.value = 1; if(this.value > 100) this.value = 100;" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Region</label>
+                                    <select id="f-region" class="form-select" required>
+                                        <option value="Northwest">Northwest</option>
+                                        <option value="Northeast">Northeast</option>
+                                        <option value="Southwest">Southwest</option>
+                                        <option value="Southeast">Southeast</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Insurance Plan</label>
+                                    <select id="f-plan" class="form-select" required>
+                                        <option value="Bronze">Bronze</option>
+                                        <option value="Silver">Silver</option>
+                                        <option value="Gold">Gold</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 mt-auto">
+                                <button type="button" class="btn-secondary w-1/3" onclick="prevStep(2)">Back</button>
+                                <button type="submit" class="btn-primary w-2/3">
+                                    Predict Premium 🚀
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- RIGHT: Result Card -->
+            <div class="result-card">
+                <p class="res-eyebrow">Predicted Annual Premium</p>
+                <div class="res-value" id="res-val">
+                    Analyzing... <span class="yr">/yr</span>
+                </div>
+
+                <div class="info-card disabled" id="card-monthly">
+                    <span class="info-label">Approx Monthly</span>
+                    <div class="flex items-center gap-2">
+                        <span class="info-val" id="res-monthly">...</span>
+                        <div class="w-8 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs font-bold" id="badge-monthly" style="display:none;">✔</div>
+                    </div>
+                </div>
+
+                <div class="info-card disabled" id="card-plan">
+                    <span class="info-label">Selected Plan</span>
+                    <div class="flex items-center gap-2">
+                        <span class="info-val" id="res-plan">...</span>
+                        <div class="w-8 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold" id="badge-plan" style="display:none;">✔</div>
+                    </div>
+                </div>
+
+                <button class="btn-analyze" id="btn-analyze" disabled onclick="analyzePrice()">
+                    Analyze Your Price &rarr;
+                </button>
+                <button class="btn-accuracy" onclick="showAccuracy()">Model Accuracy Explained &rarr;</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- STREAMLIT COMMUNICATION & LOGIC -->
+    <script>
+        function sendMessageToStreamlitClient(type, data) {
+            const outData = Object.assign({isStreamlitMessage: true, type: type}, data);
+            window.parent.postMessage(outData, "*");
+        }
+        
+        if(!window.Streamlit) {
+            window.Streamlit = {
+                setComponentValue: function(value) {
+                    sendMessageToStreamlitClient("streamlit:setComponentValue", { value: value, dataType: "json" });
+                },
+                setFrameHeight: function(height) {
+                    sendMessageToStreamlitClient("streamlit:setFrameHeight", { height: height });
+                }
+            };
+            sendMessageToStreamlitClient("streamlit:componentReady", {apiVersion: 1});
+        }
+        
+        window.addEventListener('load', function() {
+            if(window.Streamlit) window.Streamlit.setFrameHeight(document.documentElement.scrollHeight);
+        });
+
+        // Navigation Logic
+        let currentStep = 0;
+        
+        function nextStep(step) {
+            const currentEl = document.getElementById('step-' + (currentStep + 1));
+            // Flip away to the left (-180deg)
+            currentEl.style.transition = 'transform 0.8s, opacity 0.4s';
+            currentEl.style.transform = 'rotateY(-180deg)';
+            currentEl.style.opacity = '0';
+            currentEl.style.pointerEvents = 'none';
+            currentEl.style.zIndex = '0';
+            setTimeout(() => { if (currentStep !== step - 1) currentEl.style.display = 'none'; }, 800);
+            
+            currentStep = step;
+            const nextEl = document.getElementById('step-' + (currentStep + 1));
+            
+            // Prepare next element on the right (180deg)
+            nextEl.style.display = 'flex';
+            nextEl.style.transform = 'rotateY(180deg)';
+            nextEl.style.opacity = '0';
+            
+            // Force reflow
+            void nextEl.offsetWidth;
+            
+            // Flip in to center
+            nextEl.style.transition = 'transform 0.8s, opacity 0.4s';
+            nextEl.style.transform = 'rotateY(0deg)';
+            nextEl.style.opacity = '1';
+            nextEl.style.pointerEvents = 'auto';
+            nextEl.style.zIndex = '10';
+        }
+        
+        function prevStep(step) {
+            const currentEl = document.getElementById('step-' + (currentStep + 1));
+            // Flip away to the right (180deg)
+            currentEl.style.transition = 'transform 0.8s, opacity 0.4s';
+            currentEl.style.transform = 'rotateY(180deg)';
+            currentEl.style.opacity = '0';
+            currentEl.style.pointerEvents = 'none';
+            currentEl.style.zIndex = '0';
+            setTimeout(() => { if (currentStep !== step) currentEl.style.display = 'none'; }, 800);
+            
+            currentStep = step - 1;
+            const prevEl = document.getElementById('step-' + (currentStep + 1));
+            
+            // Prepare prev element on the left (-180deg)
+            prevEl.style.display = 'flex';
+            prevEl.style.transform = 'rotateY(-180deg)';
+            prevEl.style.opacity = '0';
+            
+            // Force reflow
+            void prevEl.offsetWidth;
+            
+            // Flip in to center
+            prevEl.style.transition = 'transform 0.8s, opacity 0.4s';
+            prevEl.style.transform = 'rotateY(0deg)';
+            prevEl.style.opacity = '1';
+            prevEl.style.pointerEvents = 'auto';
+            prevEl.style.zIndex = '10';
+        }
+
+        // Form Submission
+        document.getElementById('premium-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = {
+                age: document.getElementById('f-age').value,
+                gender: document.getElementById('f-gender').value,
+                marital_status: document.getElementById('f-marital').value,
+                children: document.getElementById('f-children').value,
+                bmi: document.getElementById('f-bmi').value,
+                medical_history: document.getElementById('f-medical').value,
+                smoking_status: document.getElementById('f-smoking').value,
+                employment_status: document.getElementById('f-employment').value,
+                income_lakhs: document.getElementById('f-salary').value,
+                region: document.getElementById('f-region').value,
+                insurance_plan: document.getElementById('f-plan').value
+            };
+            
+            // TS forces re-render in Streamlit cache
+            window.Streamlit.setComponentValue({type: "calculate", data: data, ts: Date.now()});
+            
+            // Reset right card visually
+            document.getElementById('res-val').innerHTML = 'Analyzing... <span class="yr">/yr</span>';
+            document.getElementById('card-monthly').classList.add('disabled');
+            document.getElementById('card-plan').classList.add('disabled');
+            document.getElementById('res-monthly').innerText = "...";
+            document.getElementById('res-plan').innerText = "...";
+            document.getElementById('badge-monthly').style.display = 'none';
+            document.getElementById('badge-plan').style.display = 'none';
+            document.getElementById('btn-analyze').disabled = true;
+        });
+
+        // Listen for results back from python
+        window.addEventListener("message", function(event) {
+            if (event.data.type === "streamlit:render") {
+                const args = event.data.args;
+                if (args && args.prediction !== null && args.prediction !== undefined) {
+                    
+                    // Activate cards
+                    document.getElementById('card-monthly').classList.remove('disabled');
+                    document.getElementById('card-plan').classList.remove('disabled');
+                    document.getElementById('btn-analyze').disabled = false;
+                    
+                    // Fill text fields
+                    document.getElementById('res-plan').innerText = args.plan_name;
+                    document.getElementById('badge-plan').style.display = 'flex';
+                    
+                    // Car-Launch Roll Animation
+                    animateValue(document.getElementById('res-val'), args.prediction, 3000);
+                }
+            }
+        });
+
+        // Car-Launch Roll Animation (Lower -> Higher -> Actual)
+        function animateValue(obj, finalTarget, duration) {
+            let start = null;
+            // cubic easing for a much smoother slowdown
+            const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+            
+            const step = (timestamp) => {
+                if (!start) start = timestamp;
+                const timeElapsed = timestamp - start;
+                let progress = timeElapsed / duration;
+                if (progress > 1) progress = 1;
+                
+                progress = easeOutCubic(progress);
+                let currentVal = progress * finalTarget;
+                
+                // Keep it a whole number during the entire rolling animation
+                obj.innerHTML = `<span class="currency">₹</span>` + Math.round(currentVal).toLocaleString('en-IN') + `<span class="yr">/yr</span>`;
+                
+                // Also update the monthly value interactively as it rolls
+                document.getElementById('res-monthly').innerText = "₹" + Math.floor(currentVal / 12).toLocaleString('en-IN');
+                
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = `<span class="currency">₹</span>` + Math.round(finalTarget).toLocaleString('en-IN') + `<span class="yr">/yr</span>`;
+                    document.getElementById('res-monthly').innerText = "₹" + Math.round(finalTarget / 12).toLocaleString('en-IN');
+                    document.getElementById('badge-monthly').style.display = 'flex';
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function analyzePrice() {
+            window.Streamlit.setComponentValue({
+                type: 'analyze_price',
+                ts: Date.now()
+            });
+        }
+        
+        function showAccuracy() {
+            window.Streamlit.setComponentValue({
+                type: 'show_accuracy',
+                ts: Date.now()
+            });
+        }
+
+        // ── Particle network on canvas (Light Blue Theme) ──
+        const canvas = document.getElementById('universe');
+        const ctx = canvas.getContext('2d');
+        let W, H, particles = [], mouse = {x:-9999,y:-9999};
+
+        const CONFIG = { count: 80, maxDist: 150, speed: 0.3, radius: 2, color: '59,130,246', lineOpacity: 0.15 };
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * W; this.y = Math.random() * H;
+                this.vx = (Math.random() - 0.5) * CONFIG.speed * 2;
+                this.vy = (Math.random() - 0.5) * CONFIG.speed * 2;
+                this.r = Math.random() * CONFIG.radius + 1;
+                this.a = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > W) this.vx *= -1;
+                if (this.y < 0 || this.y > H) this.vy *= -1;
+                const dx = this.x - mouse.x, dy = this.y - mouse.y;
+                const d = Math.sqrt(dx*dx + dy*dy);
+                if (d < 120) { this.x += dx / d * 1.5; this.y += dy / d * 1.5; }
+            }
+            draw() {
+                ctx.beginPath();
+                const grd = ctx.createRadialGradient(this.x,this.y,0, this.x,this.y,this.r*2);
+                grd.addColorStop(0, `rgba(${CONFIG.color},${this.a})`);
+                grd.addColorStop(1, `rgba(${CONFIG.color},0)`);
+                ctx.fillStyle = grd;
+                ctx.arc(this.x, this.y, this.r*2, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+
+        function init() { resize(); particles = Array.from({length: CONFIG.count}, () => new Particle()); }
+        function drawLines() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i+1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x; const dy = particles[i].y - particles[j].y;
+                    const d = Math.sqrt(dx*dx + dy*dy);
+                    if (d < CONFIG.maxDist) {
+                        const alpha = (1 - d/CONFIG.maxDist) * CONFIG.lineOpacity;
+                        ctx.beginPath(); ctx.strokeStyle = `rgba(${CONFIG.color},${alpha})`; ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                    }
+                }
+                const dx = particles[i].x - mouse.x; const dy = particles[i].y - mouse.y;
+                const d = Math.sqrt(dx*dx + dy*dy);
+                if (d < CONFIG.maxDist * 1.2) {
+                    const alpha = (1 - d/(CONFIG.maxDist*1.2)) * 0.3;
+                    ctx.beginPath(); ctx.strokeStyle = `rgba(59,130,246,${alpha})`; ctx.lineWidth = 1.2;
+                    ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
+                }
+            }
+        }
+        function loop() {
+            ctx.clearRect(0, 0, W, H); drawLines();
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(loop);
+        }
+        window.addEventListener('resize', () => { resize(); init(); });
+        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+        init(); loop();
+    </script>
+</body>
+</html>
