@@ -377,7 +377,9 @@
                 margin-bottom: 2rem;
             }
             .wizard-step {
-                padding: 1.5rem;
+                height: max-content !important;
+                padding: 1.5rem !important;
+                overflow: visible !important;
             }
             .res-value {
                 font-size: 3.5rem;
@@ -651,13 +653,18 @@
 
         function updateIframeHeight(activeStep) {
             const container = document.getElementById('wizard');
-            const stepHeight = activeStep.scrollHeight;
             
-            // Adjust container height so it pushes the result-card down on mobile
-            container.style.height = stepHeight + "px";
-            container.style.minHeight = stepHeight + "px";
+            // Briefly unlock the container height so the step can expand to its true size
+            container.style.height = 'auto';
+            container.style.minHeight = '0px';
             
-            sendHeightToStreamlit();
+            setTimeout(() => {
+                const stepHeight = activeStep.scrollHeight;
+                // Adjust container height so it perfectly fits the step and pushes the result-card down
+                container.style.height = stepHeight + "px";
+                container.style.minHeight = stepHeight + "px";
+                sendHeightToStreamlit();
+            }, 50);
         }
 
         // Navigation Logic
