@@ -14,7 +14,61 @@ st.markdown("""
     .block-container { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
     footer { display: none !important; }
     iframe { border: none !important; width: 100vw !important; height: 100vh !important; position: absolute; top: 0; left: 0; }
+    
+    .ai-fab {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.5);
+        cursor: pointer;
+        z-index: 999999;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        text-decoration: none;
+    }
+    .ai-fab:hover {
+        transform: scale(1.1) translateY(-5px);
+        box-shadow: 0 15px 35px -5px rgba(37, 99, 235, 0.6);
+        color: white;
+    }
+    .ai-fab::after {
+        content: "Talk to Pulse AI";
+        position: absolute;
+        right: 4.5rem;
+        background: white;
+        color: #0f172a;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s;
+        transform: translateX(10px);
+        white-space: nowrap;
+        font-family: sans-serif;
+    }
+    .ai-fab:hover::after {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    @media (max-width: 768px) {
+        .ai-fab { bottom: 1.5rem; right: 1.5rem; }
+        .ai-fab::after { display: none; }
+    }
 </style>
+
+<a href="#" class="ai-fab" onclick="alert('Pulse AI Agent initializing... Coming soon!'); return false;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+</a>
 """, unsafe_allow_html=True)
 
 @st.cache_resource

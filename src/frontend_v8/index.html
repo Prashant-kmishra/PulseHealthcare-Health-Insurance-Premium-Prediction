@@ -335,20 +335,35 @@
         }
         .btn-accuracy:hover { background: #f8fafc; border-color: #cbd5e1; }
 
+        #mobile-back-btn { display: none; }
+        
         /* --- MOBILE RESPONSIVE QUERIES --- */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
+            .mobile-result-active .scene { display: none !important; }
+            .mobile-result-active .result-card { margin-top: 0; min-height: 520px; }
+            #mobile-back-btn { display: block !important; margin-bottom: 1.5rem; width: 100%; }
+            
             .split-layout {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
                 gap: 1.5rem;
             }
             .grid-cols-2 {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
             }
             .header-text h1 {
                 font-size: 2.25rem;
             }
+            .top-nav {
+                flex-wrap: wrap;
+                padding: 1rem;
+                gap: 0.5rem;
+            }
             .nav-links {
-                display: none;
+                display: flex !important;
+                width: 100%;
+                justify-content: center;
+                gap: 1.5rem;
+                font-size: 0.9rem;
             }
             .wizard-container {
                 height: auto;
@@ -369,7 +384,7 @@
             }
             .main-container {
                 padding: 1rem;
-                margin: 1rem auto;
+                margin: 8rem auto 5rem auto;
             }
             .step-header {
                 margin-bottom: 1.5rem;
@@ -565,6 +580,7 @@
 
             <!-- RIGHT: Result Card -->
             <div class="result-card">
+                <button id="mobile-back-btn" class="btn-secondary" onclick="document.body.classList.remove('mobile-result-active'); setTimeout(sendHeightToStreamlit, 50);">&larr; Edit Details</button>
                 <p class="res-eyebrow">Predicted Annual Premium</p>
                 <div class="res-value" id="res-val">
                     Analyzing... <span class="yr">/yr</span>
@@ -614,9 +630,35 @@
             sendMessageToStreamlitClient("streamlit:componentReady", {apiVersion: 1});
         }
         
+        function sendHeightToStreamlit() {
+            if(window.Streamlit) {
+                const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, document.body.offsetHeight);
+                window.Streamlit.setFrameHeight(height + 50);
+            }
+        }
+        
         window.addEventListener('load', function() {
-            if(window.Streamlit) window.Streamlit.setFrameHeight(document.documentElement.scrollHeight);
+            if(window.Streamlit) {
+                const observer = new ResizeObserver(() => {
+                    sendHeightToStreamlit();
+                });
+                observer.observe(document.body);
+                setTimeout(() => {
+                    updateIframeHeight(document.getElementById('step-1'));
+                }, 100);
+            }
         });
+
+        function updateIframeHeight(activeStep) {
+            const container = document.getElementById('wizard');
+            const stepHeight = activeStep.scrollHeight;
+            
+            // Adjust container height so it pushes the result-card down on mobile
+            container.style.height = stepHeight + "px";
+            container.style.minHeight = stepHeight + "px";
+            
+            sendHeightToStreamlit();
+        }
 
         // Navigation Logic
         let currentStep = 0;
@@ -648,6 +690,8 @@
             nextEl.style.opacity = '1';
             nextEl.style.pointerEvents = 'auto';
             nextEl.style.zIndex = '10';
+            
+            updateIframeHeight(nextEl);
         }
         
         function prevStep(step) {
@@ -677,6 +721,8 @@
             prevEl.style.opacity = '1';
             prevEl.style.pointerEvents = 'auto';
             prevEl.style.zIndex = '10';
+            
+            updateIframeHeight(prevEl);
         }
 
         // Form Submission
@@ -710,23 +756,34 @@
             document.getElementById('btn-analyze').disabled = true;
         });
 
+        let lastProcessedTs = null;
         // Listen for results back from python
         window.addEventListener("message", function(event) {
             if (event.data.type === "streamlit:render") {
                 const args = event.data.args;
                 if (args && args.prediction !== null && args.prediction !== undefined) {
                     
-                    // Activate cards
-                    document.getElementById('card-monthly').classList.remove('disabled');
-                    document.getElementById('card-plan').classList.remove('disabled');
-                    document.getElementById('btn-analyze').disabled = false;
-                    
-                    // Fill text fields
-                    document.getElementById('res-plan').innerText = args.plan_name;
-                    document.getElementById('badge-plan').style.display = 'flex';
-                    
-                    // Car-Launch Roll Animation
-                    animateValue(document.getElementById('res-val'), args.prediction, 3000);
+                    if (args.ts !== lastProcessedTs) {
+                        lastProcessedTs = args.ts;
+                        
+                        // Activate cards
+                        document.getElementById('card-monthly').classList.remove('disabled');
+                        document.getElementById('card-plan').classList.remove('disabled');
+                        document.getElementById('btn-analyze').disabled = false;
+                        
+                        // Fill text fields
+                        document.getElementById('res-plan').innerText = args.plan_name;
+                        document.getElementById('badge-plan').style.display = 'flex';
+                        
+                        // App-like mobile panel switch
+                        if(window.innerWidth <= 1024) {
+                            document.body.classList.add('mobile-result-active');
+                            setTimeout(sendHeightToStreamlit, 50);
+                        }
+                        
+                        // Car-Launch Roll Animation
+                        animateValue(document.getElementById('res-val'), args.prediction, 3000);
+                    }
                 }
             }
         });
