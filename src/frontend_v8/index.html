@@ -366,10 +366,17 @@
                 font-size: 0.9rem;
             }
             .wizard-container {
-                height: auto;
-                min-height: 520px;
+                height: auto !important;
+                min-height: 0 !important;
             }
-            .result-card {
+            .wizard-step {
+                position: relative !important;
+                height: auto !important;
+                transform: none !important;
+                transition: opacity 0.3s !important;
+                padding: 1.5rem !important;
+                overflow: visible !important;
+            }
                 height: auto;
                 min-height: 400px;
                 padding: 1.5rem;
@@ -672,64 +679,94 @@
         
         function nextStep(step) {
             const currentEl = document.getElementById('step-' + (currentStep + 1));
-            // Flip away to the left (-180deg)
-            currentEl.style.transition = 'transform 0.8s, opacity 0.4s';
-            currentEl.style.transform = 'rotateY(-180deg)';
-            currentEl.style.opacity = '0';
-            currentEl.style.pointerEvents = 'none';
-            currentEl.style.zIndex = '0';
-            setTimeout(() => { if (currentStep !== step - 1) currentEl.style.display = 'none'; }, 800);
+            const targetStep = step;
             
-            currentStep = step;
-            const nextEl = document.getElementById('step-' + (currentStep + 1));
-            
-            // Prepare next element on the right (180deg)
-            nextEl.style.display = 'flex';
-            nextEl.style.transform = 'rotateY(180deg)';
-            nextEl.style.opacity = '0';
-            
-            // Force reflow
-            void nextEl.offsetWidth;
-            
-            // Flip in to center
-            nextEl.style.transition = 'transform 0.8s, opacity 0.4s';
-            nextEl.style.transform = 'rotateY(0deg)';
-            nextEl.style.opacity = '1';
-            nextEl.style.pointerEvents = 'auto';
-            nextEl.style.zIndex = '10';
-            
-            updateIframeHeight(nextEl);
+            if (window.innerWidth <= 1024) {
+                // Mobile: Instant DOM swap to allow native scrollHeight calculation
+                currentEl.style.display = 'none';
+                currentEl.style.opacity = '0';
+                
+                currentStep = targetStep;
+                const nextEl = document.getElementById('step-' + (currentStep + 1));
+                
+                nextEl.style.display = 'flex';
+                nextEl.style.opacity = '1';
+                nextEl.style.transform = 'none';
+                nextEl.style.pointerEvents = 'auto';
+                nextEl.style.zIndex = '10';
+                
+                updateIframeHeight(nextEl);
+            } else {
+                // Desktop: 3D Flip
+                currentEl.style.transition = 'transform 0.8s, opacity 0.4s';
+                currentEl.style.transform = 'rotateY(-180deg)';
+                currentEl.style.opacity = '0';
+                currentEl.style.pointerEvents = 'none';
+                currentEl.style.zIndex = '0';
+                setTimeout(() => { if (currentStep !== targetStep - 1) currentEl.style.display = 'none'; }, 800);
+                
+                currentStep = targetStep;
+                const nextEl = document.getElementById('step-' + (currentStep + 1));
+                
+                nextEl.style.display = 'flex';
+                nextEl.style.transform = 'rotateY(180deg)';
+                nextEl.style.opacity = '0';
+                void nextEl.offsetWidth;
+                
+                nextEl.style.transition = 'transform 0.8s, opacity 0.4s';
+                nextEl.style.transform = 'rotateY(0deg)';
+                nextEl.style.opacity = '1';
+                nextEl.style.pointerEvents = 'auto';
+                nextEl.style.zIndex = '10';
+                
+                updateIframeHeight(nextEl);
+            }
         }
         
         function prevStep(step) {
             const currentEl = document.getElementById('step-' + (currentStep + 1));
-            // Flip away to the right (180deg)
-            currentEl.style.transition = 'transform 0.8s, opacity 0.4s';
-            currentEl.style.transform = 'rotateY(180deg)';
-            currentEl.style.opacity = '0';
-            currentEl.style.pointerEvents = 'none';
-            currentEl.style.zIndex = '0';
-            setTimeout(() => { if (currentStep !== step) currentEl.style.display = 'none'; }, 800);
+            const targetStep = step - 1;
             
-            currentStep = step - 1;
-            const prevEl = document.getElementById('step-' + (currentStep + 1));
-            
-            // Prepare prev element on the left (-180deg)
-            prevEl.style.display = 'flex';
-            prevEl.style.transform = 'rotateY(-180deg)';
-            prevEl.style.opacity = '0';
-            
-            // Force reflow
-            void prevEl.offsetWidth;
-            
-            // Flip in to center
-            prevEl.style.transition = 'transform 0.8s, opacity 0.4s';
-            prevEl.style.transform = 'rotateY(0deg)';
-            prevEl.style.opacity = '1';
-            prevEl.style.pointerEvents = 'auto';
-            prevEl.style.zIndex = '10';
-            
-            updateIframeHeight(prevEl);
+            if (window.innerWidth <= 1024) {
+                // Mobile: Instant DOM swap
+                currentEl.style.display = 'none';
+                currentEl.style.opacity = '0';
+                
+                currentStep = targetStep;
+                const prevEl = document.getElementById('step-' + (currentStep + 1));
+                
+                prevEl.style.display = 'flex';
+                prevEl.style.opacity = '1';
+                prevEl.style.transform = 'none';
+                prevEl.style.pointerEvents = 'auto';
+                prevEl.style.zIndex = '10';
+                
+                updateIframeHeight(prevEl);
+            } else {
+                // Desktop: 3D Flip
+                currentEl.style.transition = 'transform 0.8s, opacity 0.4s';
+                currentEl.style.transform = 'rotateY(180deg)';
+                currentEl.style.opacity = '0';
+                currentEl.style.pointerEvents = 'none';
+                currentEl.style.zIndex = '0';
+                setTimeout(() => { if (currentStep !== targetStep + 1) currentEl.style.display = 'none'; }, 800);
+                
+                currentStep = targetStep;
+                const prevEl = document.getElementById('step-' + (currentStep + 1));
+                
+                prevEl.style.display = 'flex';
+                prevEl.style.transform = 'rotateY(-180deg)';
+                prevEl.style.opacity = '0';
+                void prevEl.offsetWidth;
+                
+                prevEl.style.transition = 'transform 0.8s, opacity 0.4s';
+                prevEl.style.transform = 'rotateY(0deg)';
+                prevEl.style.opacity = '1';
+                prevEl.style.pointerEvents = 'auto';
+                prevEl.style.zIndex = '10';
+                
+                updateIframeHeight(prevEl);
+            }
         }
 
         // Form Submission
