@@ -8,7 +8,7 @@ if project_root not in sys.path:
 
 import streamlit as st
 import streamlit.components.v1 as components
-from src.inference.router import ModelRouter
+from src.router import ModelRouter
 
 st.set_page_config(layout="wide", page_title="Pulse Healthcare AI", initial_sidebar_state="collapsed")
 

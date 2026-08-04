@@ -1,6 +1,6 @@
 import os
 from typing import Dict, Any, Union
-from src.inference.pipeline import InsurancePremiumPipeline
+from src.pipeline import InsurancePremiumPipeline
 
 class ModelRouter:
     """
@@ -12,11 +12,8 @@ class ModelRouter:
         """
         Initializes both pipelines and loads their respective models into memory.
         """
-        youth_dir = os.path.join(base_artifacts_dir, "v2_segmented", "youth")
-        senior_dir = os.path.join(base_artifacts_dir, "v2_segmented", "rest")
-        
-        self.youth_pipeline = InsurancePremiumPipeline(artifacts_dir=youth_dir, prefix="youth_")
-        self.senior_pipeline = InsurancePremiumPipeline(artifacts_dir=senior_dir, prefix="senior_")
+        self.youth_pipeline = InsurancePremiumPipeline(artifacts_dir=base_artifacts_dir, prefix="youth_")
+        self.senior_pipeline = InsurancePremiumPipeline(artifacts_dir=base_artifacts_dir, prefix="senior_")
         
     def predict(self, user_data: Dict[str, Any]) -> Union[float, list]:
         """
